@@ -1,39 +1,18 @@
-pipeline {
-    agent any
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                // Checkout source code from version control
-                script {
-                    checkout scm
-                }
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                // Build Spring Boot application
-                script {
-                    sh './mvnw clean install'
-                }
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                // Run tests
-                script {
-                    sh './mvnw test'
-                }
-            }
-        }
+node {
+  stage("Clone the project") {
+    git branch: 'main', url: 'https://github.com/nkchauhan003/jenkins-demo.git'
+  }
+
+  stage("Compilation") {
+    sh "./mvnw clean install -DskipTests"
+  }
+
+  stage("Tests and Deployment") {
+    stage("Runing unit tests") {
+      sh "./mvnw test -Punit"
     }
-    
-    post {
-        always {
-            // Clean up (optional)
-            deleteDir()
-        }
+    stage("Deployment") {
+      sh 'nohup ./mvnw spring-boot:run -Dserver.port=8001 &'
     }
+  }
 }
